@@ -1,0 +1,8 @@
+{
+  //error messages
+  "ErrorOccurred": "An error occurred while processing your request.",
+  "NotFound": "No data found",
+
+  //success messages
+  "Success": "Operation successful."
+}

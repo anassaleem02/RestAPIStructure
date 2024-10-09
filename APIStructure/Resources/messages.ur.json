@@ -1,0 +1,8 @@
+{
+  // error messages
+  "ErrorOccurred": "آپ کی درخواست پر کارروائی کے دوران ایک غلطی پیش آئی۔",
+  "NotFound": "کوئی ڈیٹا نہیں ملا",
+
+  // success messages
+  "Success": "آپریشن کامیاب رہا۔"
+}
