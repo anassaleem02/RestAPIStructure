@@ -3,7 +3,7 @@ using CommonDataLayer.Enums;
 using CommonDataLayer.Helpers;
 using CommonDataLayer.IRepositories;
 using CommonDataLayer.IServices;
-using CommonDataLayer.Model;
+using CommonDataLayer.Model.ResponseModels;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using System.Net;
@@ -67,11 +67,11 @@ namespace BusinessLayer.Services
             }, _logger, _localizer, ErrorCode.ErrorOccurred, SuccessCode.Success);
         }
 
-        public async Task<ApiResponse> AddAsync(TDto dto)
+        public async Task<ApiResponse> AddAsync(TEntity TDto)
         {
             return await _repository.ExecuteInTransactionAsync(async transaction =>
             {
-                var entity = _mapper.Map<TEntity>(dto);
+                var entity = _mapper.Map<TEntity>(TDto);
                 var recordId = await _repository.AddAsync(entity, transaction);
 
                 return new ApiResponse
@@ -83,7 +83,7 @@ namespace BusinessLayer.Services
             }, _logger, _localizer, ErrorCode.ErrorOccurred, SuccessCode.Success);
         }
 
-        public async Task<ApiResponse> UpdateAsync(int id, TDto dto)
+        public async Task<ApiResponse> UpdateAsync(int id, TEntity TDto)
         {
             return await _repository.ExecuteInTransactionAsync(async transaction =>
             {
@@ -98,7 +98,7 @@ namespace BusinessLayer.Services
                     };
                 }
 
-                var updatedEntity = _mapper.Map(dto, existingEntity);
+                var updatedEntity = _mapper.Map(TDto, existingEntity);
                 var isUpdated = await _repository.UpdateAsync(updatedEntity, transaction);
 
                 return new ApiResponse

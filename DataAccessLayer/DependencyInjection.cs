@@ -27,6 +27,7 @@ namespace DataAccessLayer
             // Register your business services here
             services.AddScoped(typeof(IGenericService<,>), typeof(GenericService<,>));
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IAuthService, AuthService>();
             // Register the generic LocalizationService
             services.AddSingleton(typeof(IStringLocalizer<>), typeof(LocalizationService<>));
 

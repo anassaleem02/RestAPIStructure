@@ -1,6 +1,10 @@
-﻿using CommonDataLayer.DTOs;
+﻿using AutoMapper;
+using CommonDataLayer.DTOs;
 using CommonDataLayer.Entities;
+using CommonDataLayer.Helpers;
 using CommonDataLayer.IServices;
+using CommonDataLayer.Model.RequestModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WorshipcareAPI.Controllers
@@ -12,11 +16,12 @@ namespace WorshipcareAPI.Controllers
     {
         private readonly IGenericService<UserDto, Users> _genericService;
         private readonly IUserService _userService;
-
-        public UserController(IGenericService<UserDto, Users> genericService,IUserService userService,ILogger<UserController> logger) : base(logger)
+        private readonly IMapper _mapper;
+        public UserController(IGenericService<UserDto, Users> genericService,IUserService userService,ILogger<UserController> logger, IMapper mapper) : base(logger)
         {
             _genericService = genericService;
             _userService = userService;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -40,21 +45,24 @@ namespace WorshipcareAPI.Controllers
         }
 
         [HttpPost]
-        public Task<IActionResult> Add([FromBody] UserDto userDto)
+        public Task<IActionResult> Add([FromBody] UserRegistrationRequestModel userRegistration)
         {
             return ExecuteAndLogAsync(nameof(Add), async () =>
             {
-                var response = await _genericService.AddAsync(userDto);
+                userRegistration.Password = Utilities.HashPassword(userRegistration.Password);
+                var newEntity = _mapper.Map<UserRegistrationRequestModel,Users>(userRegistration);
+                var response = await _genericService.AddAsync(newEntity);
                 return StatusCode((int)response.HttpStatusCode, response);
             });
         }
 
         [HttpPut("{id}")]
-        public Task<IActionResult> Update(int id, [FromBody] UserDto userDto)
+        public Task<IActionResult> Update(int id, [FromBody] UserRegistrationRequestModel updateRequestModel)
         {
             return ExecuteAndLogAsync(nameof(Update), async () =>
             {
-                var response = await _genericService.UpdateAsync(id, userDto);
+                var updateEntity = _mapper.Map<Users>(updateRequestModel);
+                var response = await _genericService.UpdateAsync(id, updateEntity);
                 return StatusCode((int)response.HttpStatusCode, response);
             });
         }
@@ -68,7 +76,7 @@ namespace WorshipcareAPI.Controllers
                 return StatusCode((int)response.HttpStatusCode, response);
             });
         }
-
+        [Authorize]
         [HttpGet("user/email/{email}")]
         public Task<IActionResult> GetByEmail(string email)
         {
@@ -98,6 +106,7 @@ namespace WorshipcareAPI.Controllers
         /// <param name="pageSize"></param>
         /// <param name="pageNumber"></param>
         /// <returns></returns>
+        [Authorize(Roles = "Admin, Manager")]
         [HttpGet("filtered/users")]
         public Task<IActionResult> GetUsers([FromQuery] string searchTerm = null, [FromQuery] string searchColumn = null, [FromQuery] List<string> searchableColumns = null, [FromQuery] string orderByColumn = "Id", [FromQuery] bool isAscending = true, [FromQuery] int pageSize = 10, [FromQuery] int pageNumber = 1)
         {

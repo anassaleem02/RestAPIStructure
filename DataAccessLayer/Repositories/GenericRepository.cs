@@ -1,7 +1,7 @@
 ﻿using CommonDataLayer.Enums;
 using CommonDataLayer.Helpers;
 using CommonDataLayer.IRepositories;
-using CommonDataLayer.Model;
+using CommonDataLayer.Model.ResponseModels;
 using Dapper;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;

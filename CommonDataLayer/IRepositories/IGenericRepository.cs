@@ -1,5 +1,5 @@
 ﻿using CommonDataLayer.Enums;
-using CommonDataLayer.Model;
+using CommonDataLayer.Model.ResponseModels;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using System.Data;

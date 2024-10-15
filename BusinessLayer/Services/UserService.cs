@@ -4,7 +4,7 @@ using CommonDataLayer.Entities;
 using CommonDataLayer.Enums;
 using CommonDataLayer.IRepositories;
 using CommonDataLayer.IServices;
-using CommonDataLayer.Model;
+using CommonDataLayer.Model.ResponseModels;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using System.Net;
@@ -87,7 +87,7 @@ namespace BusinessLayer.Services
                 };
             }, _logger, _localizer, ErrorCode.NotFound);
         }
-
+        
 
     }
 }

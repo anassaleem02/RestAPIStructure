@@ -1,4 +1,4 @@
-﻿using CommonDataLayer.Model;
+﻿using CommonDataLayer.Model.ResponseModels;
 
 namespace CommonDataLayer.IServices
 {
@@ -8,8 +8,8 @@ namespace CommonDataLayer.IServices
     {
         Task<ApiResponse> GetAllAsync();
         Task<ApiResponse> GetByIdAsync(int id);
-        Task<ApiResponse> AddAsync(TDto dto);
-        Task<ApiResponse> UpdateAsync(int id, TDto dto);
+        Task<ApiResponse> AddAsync(TEntity TDto);
+        Task<ApiResponse> UpdateAsync(int id, TEntity TDto);
         Task<ApiResponse> DeleteAsync(int id);
     }
 }
