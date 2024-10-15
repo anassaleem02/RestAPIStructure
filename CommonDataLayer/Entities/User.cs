@@ -1,4 +1,7 @@
-﻿namespace CommonDataLayer.Entities
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+
+namespace CommonDataLayer.Entities
 {
     public class Users : AuditModel
     {
@@ -8,5 +11,8 @@
         public string PasswordHash { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
+        [JsonIgnore]
+        [NotMapped]
+        public int Full_Count { get; set; }
     }
 }

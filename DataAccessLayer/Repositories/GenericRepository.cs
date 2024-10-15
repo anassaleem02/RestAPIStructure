@@ -18,6 +18,76 @@ namespace DataAccessLayer.Repositories
         {
             _dbConnection = dbConnection;
         }
+        public async Task<IEnumerable<TEntity>> GetDataAsync(string searchTerm, string searchColumn, string orderByColumn, bool isAscending, int pageSize, int pageNumber, List<string> searchableColumns, IDbTransaction transaction = null)
+        {
+            try
+            {
+                pageNumber = pageNumber > 0 ? pageNumber - 1 : 0;
+                var tableName = typeof(TEntity).Name;
+                var validProperties = typeof(TEntity).GetProperties().Select(p => p.Name).ToList();
+
+                if (searchableColumns != null && searchableColumns.Any(column =>
+                    !validProperties.Any(validProperty =>
+                        string.Equals(validProperty, column, StringComparison.OrdinalIgnoreCase)))
+                )
+                {
+                    throw new InvalidOperationException("Invalid searchable column(s) provided.");
+                }
+
+                if (searchableColumns == null || !searchableColumns.Any())
+                {
+                    searchableColumns = validProperties;
+                }
+
+                string whereClause = "IsDeleted = 0";
+                if (!string.IsNullOrEmpty(searchTerm))
+                {
+                    string searchIn = " CONCAT(" + string.Join(",", searchableColumns.Where(col => validProperties.Contains(col))) + ")";
+                    if (string.IsNullOrEmpty(searchColumn))
+                    {
+                        whereClause += $" AND {searchIn} LIKE @SearchTerm";
+                    }
+                    else if (searchableColumns.Any(col => string.Equals(col, searchColumn, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        whereClause += $" AND [{searchColumn}] LIKE @SearchTerm";
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Invalid search column provided.");
+                    }
+                }
+
+                var allowedOrderByColumns = validProperties.Concat(new[] { "Id" }).ToList();
+                if (!string.IsNullOrEmpty(orderByColumn) && !allowedOrderByColumns.Any(col => string.Equals(col, orderByColumn, StringComparison.OrdinalIgnoreCase)))
+                {
+                    throw new InvalidOperationException("Invalid order by column provided.");
+                }
+
+                string orderByClause = string.IsNullOrEmpty(orderByColumn)
+                    ? "ORDER BY [Id] DESC"
+                    : $"ORDER BY [{orderByColumn}] {(isAscending ? "ASC" : "DESC")}";
+
+                string paginationClause = pageSize > 0
+                    ? $"OFFSET {pageNumber * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY"
+                    : string.Empty;
+
+                string sql = $@"
+            SELECT x.*, x.Full_Count 
+            FROM (SELECT *, COUNT(*) OVER() AS full_count FROM {tableName} WHERE {whereClause}) AS x 
+            {orderByClause} 
+            {paginationClause}";
+
+                var param = new { SearchTerm = $"%{searchTerm}%" };
+                var result = await _dbConnection.QueryAsync<TEntity>(sql, param, transaction: transaction);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Error fetching data", ex);
+            }
+        }
+
+
 
         public async Task<IEnumerable<TEntity>> GetAllAsync(IDbTransaction transaction = null)
         {

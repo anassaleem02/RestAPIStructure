@@ -67,5 +67,27 @@ namespace BusinessLayer.Services
                 };
             }, _logger, _localizer, ErrorCode.NotFound);
         }
+                // Extract the total count from one of the result rows (since all rows have the same full_count)
+        public async Task<ApiResponse> GetUsersAsync(string searchTerm = null, string searchColumn = null, string orderByColumn = "Id", bool isAscending = true, int pageSize = 10, int pageNumber = 1,List<string>? searchableColumns =null)
+        {
+            return await _userRepository.ExecuteInTransactionAsync(async transaction =>
+            {
+                var users = await _userRepository.GetDataAsync(searchTerm, searchColumn, orderByColumn, isAscending, pageSize, pageNumber, searchableColumns, transaction);
+
+                var userDtos = _mapper.Map<IEnumerable<UserDto>>(users);
+
+                var totalCount = users.FirstOrDefault()?.Full_Count ?? 0;
+
+                return new ApiResponse
+                {
+                    HttpStatusCode = HttpStatusCode.OK,
+                    Success = true,
+                    Data = userDtos,
+                    Count = totalCount // Return the total count
+                };
+            }, _logger, _localizer, ErrorCode.NotFound);
+        }
+
+
     }
 }

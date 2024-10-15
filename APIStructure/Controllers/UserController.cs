@@ -87,6 +87,27 @@ namespace WorshipcareAPI.Controllers
                 return StatusCode((int)response.HttpStatusCode, response);
             });
         }
+        /// <summary>
+        /// Get all users with filters
+        /// </summary>
+        /// <param name="searchTerm"></param>
+        /// <param name="searchColumn"></param>
+        /// <param name="searchableColumns"></param>
+        /// <param name="orderByColumn"></param>
+        /// <param name="isAscending"></param>
+        /// <param name="pageSize"></param>
+        /// <param name="pageNumber"></param>
+        /// <returns></returns>
+        [HttpGet("filtered/users")]
+        public Task<IActionResult> GetUsers([FromQuery] string searchTerm = null, [FromQuery] string searchColumn = null, [FromQuery] List<string> searchableColumns = null, [FromQuery] string orderByColumn = "Id", [FromQuery] bool isAscending = true, [FromQuery] int pageSize = 10, [FromQuery] int pageNumber = 1)
+        {
+            var allowedColumns = new List<string> { "FirstName", "LastName", "Email", "UserName" };
+            return ExecuteAndLogAsync(nameof(GetUsers), async () =>
+            {
+                var response = await _userService.GetUsersAsync(searchTerm, searchColumn, orderByColumn, isAscending, pageSize, pageNumber, searchableColumns is null ? allowedColumns : searchableColumns);
+                return StatusCode((int)response.HttpStatusCode, response);
+            });
+        }
     }
 }
 

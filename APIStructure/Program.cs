@@ -12,7 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var connectionString = builder.Configuration.GetConnectionString("worshipAPIConnectionString");
+var connectionString = builder.Configuration.GetConnectionString("restAPIConnectionString");
 
 builder.Services.AddDataAccessLayer(connectionString);
 builder.Services.AddBusinessLayer();

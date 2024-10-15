@@ -8,6 +8,7 @@ namespace CommonDataLayer.IRepositories
 {
     public interface IGenericRepository<TEntity> where TEntity : class
     {
+        Task<IEnumerable<TEntity>> GetDataAsync(string searchTerm, string searchColumn, string orderByColumn, bool isAscending, int pageSize, int pageNumber, List<string> searchableColumns, IDbTransaction transaction = null);
         Task<IEnumerable<TEntity>> GetAllAsync(IDbTransaction transaction = null);
         Task<TEntity> GetByIdAsync(int id, IDbTransaction transaction = null);
         Task<int> AddAsync(TEntity entity, IDbTransaction transaction = null);
