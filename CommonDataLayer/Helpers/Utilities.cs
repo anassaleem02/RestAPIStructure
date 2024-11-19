@@ -6,24 +6,18 @@ namespace CommonDataLayer.Helpers
 {
     public static class Utilities
     {
-        public static string HashPassword(string password)
+        public static (string, string) HashPassword(string password)
         {
             // Generate a random salt
             byte[] salt = GenerateSalt();
 
-            // Combine the password and salt
-            byte[] saltedPassword = Combine(Encoding.UTF8.GetBytes(password), salt);
-
-            // Hash the combined password and salt
-            using (SHA256 sha256 = SHA256.Create())
+            // Hash the password with PBKDF2 using the generated salt
+            using (var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 10000)) // Adjust iteration count as needed
             {
-                byte[] hashedPassword = sha256.ComputeHash(saltedPassword);
+                byte[] hashedPassword = pbkdf2.GetBytes(32); // Assuming you want a 32-byte hash
 
-                // Combine hashed password and salt to store
-                byte[] hashWithSalt = Combine(hashedPassword, salt);
-
-                // Convert to base64 for storage
-                return Convert.ToBase64String(hashWithSalt);
+                // Convert both the hashed password and salt to base64 for storage
+                return (Convert.ToBase64String(hashedPassword), Convert.ToBase64String(salt));
             }
         }
 
@@ -45,6 +39,26 @@ namespace CommonDataLayer.Helpers
             Buffer.BlockCopy(first, 0, combined, 0, first.Length);
             Buffer.BlockCopy(second, 0, combined, first.Length, second.Length);
             return combined;
+        }
+        private static string HashPasswordWithSalt(string password, string saltBase64)
+        {
+            // Convert the base64 salt back to byte array
+            byte[] salt = Convert.FromBase64String(saltBase64);
+
+            // Hash the password with PBKDF2 using the provided salt
+            using (var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 10000)) // Use the same iteration count
+            {
+                byte[] hashedPassword = pbkdf2.GetBytes(32); // Assuming you want a 32-byte hash
+                return Convert.ToBase64String(hashedPassword); // Return as base64 string
+            }
+        }
+        public static bool VerifyPassword(string enteredPassword, string storedHash, string storedSalt)
+        {
+            // Generate a hash from the entered password and the stored salt
+            string hashedEnteredPassword = HashPasswordWithSalt(enteredPassword, storedSalt);
+
+            // Compare the hashed password with the stored hash
+            return hashedEnteredPassword == storedHash;
         }
     }
 }

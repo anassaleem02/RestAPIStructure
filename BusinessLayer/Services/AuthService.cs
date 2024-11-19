@@ -12,9 +12,10 @@ using AutoMapper;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using System.Net;
-using CommonDataLayer.Helpers;
 using CommonDataLayer.Model.ResponseModels;
 using CommonDataLayer.Model.RequestModels;
+using System.ComponentModel;
+using CommonDataLayer.Helpers;
 
 namespace BusinessLayer.Services
 {
@@ -75,10 +76,9 @@ namespace BusinessLayer.Services
             return await _userRepository.ExecuteInTransactionAsync(async transaction =>
             {
                 var users = await _userRepository.GetAllAsync(transaction);
-                var user = users.FirstOrDefault(u => u.Username == userreqModel.Username && u.Password == userreqModel.Password);
-                var userRoles = await _userRoleRepository.GetAllAsync(transaction);
-                var userRolesList = userRoles.Where(x => x.UserId == user.Id).ToList();
-                if (user == null)
+                var user = users.FirstOrDefault(u => u.Username == userreqModel.Username);
+                var IsUserVerified = Utilities.VerifyPassword(userreqModel.Password, user.Password, user.Salt);
+                if (!IsUserVerified)
                 {
                     return new ApiResponse
                     {
@@ -86,6 +86,9 @@ namespace BusinessLayer.Services
                         Success = false
                     };
                 }
+                var userRoles = await _userRoleRepository.GetAllAsync();
+                var userRolesList = userRoles.Where(x => x.UserId == user.Id).ToList();
+                
                 TokenResponse token = GenerateToken(user, userRolesList);
                 return new ApiResponse
                 {

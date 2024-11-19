@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace CommonDataLayer.Entities
 {
-    public class Users //: AuditModel
+    public class Users : AuditModel
     {
         public int Id { get; set; }
         public string Username { get; set; }
@@ -11,6 +11,7 @@ namespace CommonDataLayer.Entities
         public string Password { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
+        public string Salt { get; set; }
         [JsonIgnore]
         [NotMapped]
         public int Full_Count { get; set; }

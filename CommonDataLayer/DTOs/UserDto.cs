@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace CommonDataLayer.DTOs
 {
@@ -10,6 +11,7 @@ namespace CommonDataLayer.DTOs
         public string LastName { get; set; }
         public string Password { get; set; }
         [JsonIgnore]
+        [NotMapped]
         public int Full_Count { get; set; }
     }
 }

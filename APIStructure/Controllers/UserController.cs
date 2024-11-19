@@ -49,7 +49,7 @@ namespace WorshipcareAPI.Controllers
         {
             return ExecuteAndLogAsync(nameof(Add), async () =>
             {
-                userRegistration.Password = Utilities.HashPassword(userRegistration.Password);
+                (userRegistration.Password, userRegistration.Salt) = Utilities.HashPassword(userRegistration.Password);
                 var newEntity = _mapper.Map<UserRegistrationRequestModel,Users>(userRegistration);
                 var response = await _genericService.AddAsync(newEntity);
                 return StatusCode((int)response.HttpStatusCode, response);

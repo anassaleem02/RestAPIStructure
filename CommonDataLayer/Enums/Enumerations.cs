@@ -1,5 +1,4 @@
-﻿
-namespace CommonDataLayer.Helpers
+﻿namespace CommonDataLayer.Enums
 {
     public enum RoleEnum
     {

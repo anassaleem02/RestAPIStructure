@@ -5,8 +5,10 @@ using CommonDataLayer.Model.ResponseModels;
 using Dapper;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Net;
+using System.Reflection;
 
 namespace DataAccessLayer.Repositories
 {
@@ -134,14 +136,17 @@ namespace DataAccessLayer.Repositories
             var tableName = typeof(TEntity).Name; // Assumes table name matches entity name
             var properties = typeof(TEntity).GetProperties();
 
-            // Handle identity column
-            var identityProperty = properties.FirstOrDefault(p => p.Name == "Id"); // Assuming "Id" is the identity column
+            // Filter out properties with [NotMapped] attribute
+            var mappedProperties = properties.Where(p => p.GetCustomAttribute<NotMappedAttribute>() == null);
 
-            var columnNames = string.Join(", ", properties
+            // Handle identity column (assuming "Id" is the identity column)
+            var identityProperty = mappedProperties.FirstOrDefault(p => p.Name == "Id");
+
+            var columnNames = string.Join(", ", mappedProperties
                 .Where(p => identityProperty == null || p.Name != identityProperty.Name)
                 .Select(p => p.Name));
 
-            var parameterNames = string.Join(", ", properties
+            var parameterNames = string.Join(", ", mappedProperties
                 .Where(p => identityProperty == null || p.Name != identityProperty.Name)
                 .Select(p => "@" + p.Name));
 
@@ -164,7 +169,7 @@ namespace DataAccessLayer.Repositories
 
             var sql = $"INSERT INTO {tableName} ({columnNames}) VALUES ({parameterNames}); SELECT CAST(SCOPE_IDENTITY() as int);";
 
-            var parameters = properties
+            var parameters = mappedProperties
                 .Where(p => identityProperty == null || p.Name != identityProperty.Name)
                 .ToDictionary(p => "@" + p.Name, p => p.GetValue(entity));
 
@@ -177,26 +182,25 @@ namespace DataAccessLayer.Repositories
         {
             var entityType = typeof(TEntity);
 
-            // Get properties of the entity
-            var properties = entityType.GetProperties();
+            // Get properties of the entity, excluding those marked with [NotMapped]
+            var properties = entityType.GetProperties().Where(p => p.GetCustomAttribute<NotMappedAttribute>() == null);
 
             // Identify primary key property (assuming it's named "Id" by convention)
             var keyProperty = properties.FirstOrDefault(p => p.Name.Equals("Id", StringComparison.OrdinalIgnoreCase));
-
-            // Set UpdatedOn property dynamically
-            var updatedOnProperty = entity.GetType().GetProperty("UpdatedOn");
-
-            if (updatedOnProperty != null && updatedOnProperty.CanWrite)
-            {
-                updatedOnProperty.SetValue(entity, DateTime.UtcNow);
-            }
 
             if (keyProperty == null)
             {
                 throw new InvalidOperationException("No primary key property found.");
             }
 
-            // Generate SET clause
+            // Set UpdatedOn property dynamically
+            var updatedOnProperty = entity.GetType().GetProperty("UpdatedOn");
+            if (updatedOnProperty != null && updatedOnProperty.CanWrite)
+            {
+                updatedOnProperty.SetValue(entity, DateTime.UtcNow);
+            }
+
+            // Generate SET clause, excluding primary key from update and properties with [NotMapped]
             var setClause = string.Join(", ", properties
                 .Where(p => !p.Name.Equals(keyProperty.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(p => $"{p.Name} = @{p.Name}"));
@@ -206,12 +210,12 @@ namespace DataAccessLayer.Repositories
             var sql = $"UPDATE {tableName} SET {setClause} WHERE {keyProperty.Name} = @{keyProperty.Name}";
 
             // Create parameters dictionary
-            var parameters = properties.ToDictionary(p => $"@{p.Name}", p => p.GetValue(entity));
+            var parameters = properties
+                .ToDictionary(p => $"@{p.Name}", p => p.GetValue(entity));
 
             // Execute the SQL query
             return await _dbConnection.ExecuteAsync(sql, parameters, transaction);
         }
-
         public async Task<IEnumerable<TResult>> ExecuteJoinAsync<TResult>(string sql, object parameters = null, IDbTransaction transaction = null)
         {
             return await _dbConnection.QueryAsync<TResult>(sql, parameters, transaction);

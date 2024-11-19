@@ -1,5 +1,6 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace CommonDataLayer.Model.RequestModels
 {
@@ -15,7 +16,12 @@ namespace CommonDataLayer.Model.RequestModels
         [Required]
         public string LastName { get; set; }
         [Required]
+        public int RoleId { get; set; }
+
+        [Required]
         public string Email { get; set; }
+        [JsonIgnore]
+        public string? Salt { get; set; }
     }
     public class LoginRequestModel 
     {
